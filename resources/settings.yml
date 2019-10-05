@@ -1,0 +1,12 @@
+---
+# Edit the Messages command
+messages:
+  not-numeric: "This is an invalid number."
+  see: "The player {player} owns {money} Money on the bank."
+  show: "You own {money} Money in the bank."
+  add: "You deposited {money} money."
+  remove: "You withdrew {money} money."
+  not-found: "Player not found."
+  little-money: "You don't have enough money."
+  little-bank-money: "You don't have enough money in the bank."
+...
