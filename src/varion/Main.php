@@ -141,13 +141,13 @@ class Main extends PluginBase implements Listener
                     $sender->addActionBarMessage("§l§eGTA HELP LIST");
                     $sender->addTitle("§l§cGTA Help");
                     $sender->sendMessage("§6---- GTA Help ----");
-                    $sender->sendMessage("§e/level (visualizza il tuo livello e i tuoi XP)");
-                    $sender->sendMessage("§e/gtakit (Ritira il kit Iniziale)");
-                    $sender->sendMessage("§e/gta (Visualizza versione del plugin)");
+                    $sender->sendMessage("§e/level (view your level and your XP)");
+                    $sender->sendMessage("§e/gtakit (Collect the Initial kit)");
+                    $sender->sendMessage("§e/gta (View plugin version)");
                     $sender->sendMessage("");
-                    $sender->sendMessage("§b-=- SEZIONE ARMI -=-");
-                    $sender->sendMessage("§cLe armi sono le zappe, le munizioni sono le snowball/egg.");
-                    $sender->sendMessage("§cSenza le munizioni non puoi sparare");
+                    $sender->sendMessage("§b-=- ARMS SECTION -=-");
+                    $sender->sendMessage("§cThe weapons are the hoes, the ammunition is the snowball / egg.");
+                    $sender->sendMessage("§cWithout the ammunition you can't shoot");
                     $sender->sendMessage("§6---- GTA Help ----");
                     return false;
                 }
@@ -161,13 +161,13 @@ class Main extends PluginBase implements Listener
         $config->save();
         if($config->get("xp") > 0){
         } else {
-            $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."< ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." > ".TF::RESET.$event->getPlayer()->getName().TF::GREEN." è entrato nel server per la prima volta!");
+            $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."< ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." > ".TF::RESET.$event->getPlayer()->getName().TF::GREEN." entered the server for the first time!");
             $config->set("xp",10);
             $config->set("level",1);
             $config->save();
             $event->getPlayer()->sendMessage(TF::GRAY.TF::BOLD."=[".TF::RESET.TF::YELLOW."XXXXXXXXXXXXXXXXXXX".TF::BOLD.TF::GRAY."]=");
             $event->getPlayer()->sendMessage(" ");
-            $event->getPlayer()->sendMessage(TF::AQUA."Sei livello 1 per essere entrato per la prima volta!");
+            $event->getPlayer()->sendMessage(TF::AQUA."You are level 1 for entering for the first time!");
             $event->getPlayer()->sendMessage(" ");
             $event->getPlayer()->sendMessage(TF::GRAY.TF::BOLD."=[".TF::RESET.TF::YELLOW."XXXXXXXXXXXXXXXXXXX".TF::BOLD.TF::GRAY."]=");
         }
@@ -194,7 +194,7 @@ class Main extends PluginBase implements Listener
             $config->set("xp",0);
             $config->set("level",$config->get("level") + 1);
             $event->getPlayer()->setDisplayName(TF::GRAY."[".TF::GREEN."☢".TF::YELLOW.$config->get("level").TF::GRAY."§a☢§7] ".$event->getPlayer()->getName());
-            $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."=[ ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." ]= ".TF::RESET.TF::AQUA."Wow, ".TF::YELLOW.$n.TF::AQUA." è al livello ".TF::YELLOW.$config->get("level"));
+            $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."=[ ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." ]= ".TF::RESET.TF::AQUA."Wow, ".TF::YELLOW.$n.TF::AQUA." is at level ".TF::YELLOW.$config->get("level"));
             $config->save();
         }
         }
