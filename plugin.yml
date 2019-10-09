@@ -1,21 +1,21 @@
 name: GTA
 main: varion\Main
-version: 1.0-BETA
+version: 1.3
 author: Varion
 api: 3.1.4
 
 commands:
  gtakit:
-       description: "GTA Kit iniziale"
+       description: "GTA Starter Kit"
 
  hub:
-     description: "Torna alla HUB"
+     description: "Go to hub"
 
  level:
-      description: "Scopri il tuo livello e i tuoi XP"
+      description: "See your level"
 
  gta:
-    desctiption: "Comando GTA"
+    desctiption: "gta"
 
  gtahelp:
-        description: "Visualizza i comandi attuali del GTA"
+        description: "See gta help"
