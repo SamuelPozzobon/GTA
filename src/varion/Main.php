@@ -23,6 +23,7 @@ use pocketmine\level\Position;
 use pocketmine\event\Listener;
 use pocketmine\Player;
 use pocketmine\block\Air;
+use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 use pocketmine\block\Block;
 use pocketmine\item\Item;
 use pocketmine\item\Snowball as Bullet;
@@ -62,6 +63,7 @@ use onebone\economyapi\EconomyAPI;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
 use pocketmine\event\player\PlayerLoginEvent;
+use pocketmine\level\Level;
 
 class Main extends PluginBase implements Listener
 {
@@ -194,6 +196,8 @@ class Main extends PluginBase implements Listener
             $config->set("xp",0);
             $config->set("level",$config->get("level") + 1);
             $event->getPlayer()->setDisplayName(TF::GRAY."[".TF::GREEN."☢".TF::YELLOW.$config->get("level").TF::GRAY."§a☢§7] ".$event->getPlayer()->getName());
+            $p->getLevel()->broadcastLevelSoundEvent($p, LevelSoundEventPacket::SOUND_LEVELUP);
+            $event->getPlayer()->addTitle("§l§aLEVEL UP!");
             $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."=[ ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." ]= ".TF::RESET.TF::AQUA."Wow, ".TF::YELLOW.$n.TF::AQUA." is at level ".TF::YELLOW.$config->get("level"));
             $config->save();
         }
