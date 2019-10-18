@@ -23,7 +23,6 @@ use pocketmine\level\Position;
 use pocketmine\event\Listener;
 use pocketmine\Player;
 use pocketmine\block\Air;
-use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 use pocketmine\block\Block;
 use pocketmine\item\Item;
 use pocketmine\item\Snowball as Bullet;
@@ -55,6 +54,7 @@ use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat as TF;
 use pocketmine\utils\TextFormat as C;
 use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\event\player\PlayerLoginEvent;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\network\mcpe\protocol\LoginPacket;
@@ -62,8 +62,7 @@ use pocketmine\event\server\DataPacketReceiveEvent;
 use onebone\economyapi\EconomyAPI;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
-use pocketmine\event\player\PlayerLoginEvent;
-use pocketmine\level\Level;
+
 
 class Main extends PluginBase implements Listener
 {
@@ -79,6 +78,14 @@ class Main extends PluginBase implements Listener
         $this->saveResource("settings.yml");
         $this->cfg = new Config($this->getDataFolder() . "settings.yml", Config::YAML);
         $this->bank = new Config($this->getDataFolder() . "bank.yml", Config::YAML);
+		$folder = $this->getDataFolder();
+			if(!is_dir($folder))
+				@mkdir($folder);
+			$this->saveDefaultConfig();
+			$this->config = (new Config($folder.'config.yml', Config::YAML))->getAll();
+			$this->users = (new Config($folder.'users.yml', Config::YAML))->getAll();
+			$this->getServer()->getPluginManager()->registerEvents(new aQuestListener($this), $this);
+			$this->eco = new aQuestEconomyManager($this);
         if(!$this->getServer()->getPluginManager()->getPlugin("EconomyAPI")) {
             $this->getLogger()->alert("The plugin was deactivated because the EconomyAPI plugin was not found.");
             $this->getServer()->getPluginManager()->disablePlugin($this->getServer()->getPluginManager()->getPlugin("EconomyAPI"));
@@ -128,6 +135,33 @@ class Main extends PluginBase implements Listener
                     $sender->sendMessage(TF::GRAY . TF::BOLD . "=[ " . TF::RESET . TF::GREEN . "===================" . TF::GRAY . TF::BOLD . " ]=");
                     return false;
                 }
+				
+			case "quest":
+			    	$name = strtolower($sender->getName());
+					$num = $this->users[$name]['complete'];
+				        if(!isset($this->config["quests"][$num])){
+						$sender->sendMessage($this->config["questEnded"]);
+						return true;
+					}
+					$quest = $this->config['quests'][$num];
+					if($this->users[$name]['during'] !== false) {
+						$sender->sendMessage(str_replace(['\n', '{quest}', '{type}', '{target}', '{count}'], ["\n", $quest['name'], $this->getTypeQuest($quest['task']), $quest['target'], $quest['num']], $this->config['questHelp']));
+						return false;
+					}
+					if($num >= count($this->config['quests'])) {
+						$sender->sendMessage($this->config['questEnded']);
+						return false;
+					}
+					$this->users[$name]['during'] = [
+						'id' => $num,
+						'count' => 0
+					];
+					$this->save();
+					$sender->sendMessage(str_replace('{quest}', $quest['name'], $this->config['getQuest']));
+					$sender->sendMessage(str_replace(['\n', '{type}', '{target}', '{count}'], ["\n", $this->getTypeQuest($quest['task']), $quest['target'], $quest['num']], $this->config['getQuestInfo']));
+					return true;
+				}
+			break;
 
             case "hub":
                 if ($sender instanceof Player) {
@@ -143,13 +177,13 @@ class Main extends PluginBase implements Listener
                     $sender->addActionBarMessage("§l§eGTA HELP LIST");
                     $sender->addTitle("§l§cGTA Help");
                     $sender->sendMessage("§6---- GTA Help ----");
-                    $sender->sendMessage("§e/level (view your level and your XP)");
-                    $sender->sendMessage("§e/gtakit (Collect the Initial kit)");
-                    $sender->sendMessage("§e/gta (View plugin version)");
+                    $sender->sendMessage("§e/level (visualizza il tuo livello e i tuoi XP)");
+                    $sender->sendMessage("§e/gtakit (Ritira il kit Iniziale)");
+                    $sender->sendMessage("§e/gta (Visualizza versione del plugin)");
                     $sender->sendMessage("");
-                    $sender->sendMessage("§b-=- ARMS SECTION -=-");
-                    $sender->sendMessage("§cThe weapons are the hoes, the ammunition is the snowball / egg.");
-                    $sender->sendMessage("§cWithout the ammunition you can't shoot");
+                    $sender->sendMessage("§b-=- SEZIONE ARMI -=-");
+                    $sender->sendMessage("§cLe armi sono le zappe, le munizioni sono le snowball/egg.");
+                    $sender->sendMessage("§cSenza le munizioni non puoi sparare");
                     $sender->sendMessage("§6---- GTA Help ----");
                     return false;
                 }
@@ -158,18 +192,59 @@ class Main extends PluginBase implements Listener
         return false;
         }
 
+    		/**
+		 * @param string  $type
+		 * @return string $type
+		 */
+		public function getTypeQuest($type) {
+			switch(strtolower($type)) {
+				case 'blockbreak':
+						$type = 'Break';
+					break;
+				case 'blockplace':
+						$type = 'Place';
+					break;
+				case 'playerkill':
+						$type = 'Kill';
+					break;
+				case 'playerdeath':
+						$type = 'Die';
+					break;
+				case 'itemconsume':
+						$type = 'Eat';
+					break;
+				case 'itemdrop':
+						$type = 'Drop';
+					break;
+                case 'jump':
+                        $type = 'jump';
+                    break;
+                case 'hold':
+                    $type = 'hold';
+                    break;
+				default: 
+						$type = '???';
+			}
+			return $type;
+		}
+		public function save() {
+			$cfg = new Config($this->getDataFolder().'users.yml', Config::YAML);
+			$cfg->setAll($this->users);
+			$cfg->save();
+		}
+		
     public function onJoin(PlayerJoinEvent $event){
         $config = new Config($this->getDataFolder()."lp/".strtolower($event->getPlayer()->getName()).".yml", Config::YAML);
         $config->save();
         if($config->get("xp") > 0){
         } else {
-            $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."< ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." > ".TF::RESET.$event->getPlayer()->getName().TF::GREEN." entered the server for the first time!");
+            $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."< ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." > ".TF::RESET.$event->getPlayer()->getName().TF::GREEN." è entrato nel server per la prima volta!");
             $config->set("xp",10);
             $config->set("level",1);
             $config->save();
             $event->getPlayer()->sendMessage(TF::GRAY.TF::BOLD."=[".TF::RESET.TF::YELLOW."XXXXXXXXXXXXXXXXXXX".TF::BOLD.TF::GRAY."]=");
             $event->getPlayer()->sendMessage(" ");
-            $event->getPlayer()->sendMessage(TF::AQUA."You are level 1 for entering for the first time!");
+            $event->getPlayer()->sendMessage(TF::AQUA."Sei livello 1 per essere entrato per la prima volta!");
             $event->getPlayer()->sendMessage(" ");
             $event->getPlayer()->sendMessage(TF::GRAY.TF::BOLD."=[".TF::RESET.TF::YELLOW."XXXXXXXXXXXXXXXXXXX".TF::BOLD.TF::GRAY."]=");
         }
@@ -196,9 +271,7 @@ class Main extends PluginBase implements Listener
             $config->set("xp",0);
             $config->set("level",$config->get("level") + 1);
             $event->getPlayer()->setDisplayName(TF::GRAY."[".TF::GREEN."☢".TF::YELLOW.$config->get("level").TF::GRAY."§a☢§7] ".$event->getPlayer()->getName());
-            $p->getLevel()->broadcastLevelSoundEvent($p, LevelSoundEventPacket::SOUND_LEVELUP);
-            $event->getPlayer()->addTitle("§l§aLEVEL UP!");
-            $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."=[ ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." ]= ".TF::RESET.TF::AQUA."Wow, ".TF::YELLOW.$n.TF::AQUA." is at level ".TF::YELLOW.$config->get("level"));
+            $this->getServer()->broadcastMessage(TF::GRAY.TF::BOLD."=[ ".TF::RESET.TF::GREEN."GTA".TF::BOLD.TF::GRAY." ]= ".TF::RESET.TF::AQUA."Wow, ".TF::YELLOW.$n.TF::AQUA." è al livello ".TF::YELLOW.$config->get("level"));
             $config->save();
         }
         }
