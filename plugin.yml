@@ -1,21 +1,25 @@
 name: GTA
 main: varion\Main
-version: 1.3
+version: 1.5
 author: Varion
-api: 3.1.4
+api: 3.0.0
 
 commands:
  gtakit:
-       description: "GTA Starter Kit"
+       description: "GTA Kit "
 
  hub:
-     description: "Go to hub"
+     description: "Go to the hub"
 
  level:
-      description: "See your level"
+      description: "See your level end exp"
 
  gta:
-    desctiption: "gta"
+    desctiption: "GTA"
 
  gtahelp:
-        description: "See gta help"
+        description: "See gta commands"
+   
+ quest:
+        description: "See your current quest"
+        default: true
